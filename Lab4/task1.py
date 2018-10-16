@@ -241,7 +241,7 @@ def find_triples(formatted_corpus):
 
 if __name__ == '__main__':
 
-    MULTILINGUAL = True
+    MULTILINGUAL = False
 
     if MULTILINGUAL:
 
