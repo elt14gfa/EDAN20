@@ -6,6 +6,13 @@ __author__ = "Pierre Nugues"
 import transition
 import conll
 import features
+
+import time
+from sklearn import linear_model
+import pickle
+from sklearn import tree
+from sklearn import metrics
+from sklearn.feature_extraction import DictVectorizer
 import numpy as np
 
 feature_names_short = [
@@ -104,30 +111,29 @@ def all_features(formatted_corpus):
         transitions = []
 
         while queue:
-            X = []  # matrix for all featuresc
             x = features.extract(stack, queue, graph, feature_names_middle, sentence)
-            for token in x:
-                X.append(x[token])
-                X_tot.append(x[token])
-
-            #print('X =', X, end = " ")
+            X_tot.append(x)
+            # print('X =', X, end = " ")
             stack, queue, graph, trans = reference(stack, queue, graph)
             y.append(trans)
-            #print('y =', y[a], '\n')
+            # print('y =', y[a], '\n')
 
-        X_tot.append('\n')
 
         a += 1
 
 
 
         stack, graph = transition.empty_stack(stack, graph)
-
-
     return X_tot, y
 
 
-
+def parse_ml(stack, queue, graph, trans):
+    print('stack: ', stack)
+    print('trans: ', trans[:2])
+    if stack and trans[:2] == 'ra':
+        stack, queue, graph = transition.right_arc(stack, queue, graph, trans[3:])
+        return stack, queue, graph, 'ra'
+    if
 
 
 if __name__ == '__main__':
@@ -138,23 +144,36 @@ if __name__ == '__main__':
 
     sentences = conll.read_sentences(train_file)
     formatted_corpus = conll.split_rows(sentences, column_names_2006)
+    try:
+       model = pickle.load(open('predicted_model.txt', 'rb'))
+    except:
+        print("Extracting the features...")
+        X_dict, y_train_symbols = all_features(formatted_corpus)
+        print("Encoding the features...")
+        vec = DictVectorizer(sparse=True)
+        X = vec.fit_transform(X_dict)
+        print("Training the model...")
+        classifier = linear_model.LogisticRegression(penalty='l2', dual=True, solver='liblinear')
+        model = classifier.fit(X, y_train_symbols)
 
-    #feat, action = (all_features(formatted_corpus))
+        y_train_predicted = classifier.predict(X)
+        print(model)
+        print("Classification report for classifier %s:\n%s\n"
+              % (classifier, metrics.classification_report(y_train_symbols, y_train_predicted)))
 
-    X, y = all_features(formatted_corpus)
+        pickle.dump(model, open('predicted_model.txt', 'wb'))
 
-    print('X:', X)
-    #print('y:', y)
+
+    sentences = conll.read_sentences(test_file)
+    formatted_corpus = conll.split_rows(sentences, column_names_2006)
 
     sent_cnt = 0
     for sentence in formatted_corpus:
         sent_cnt += 1
         if sent_cnt % 1000 == 0:
-            #print(sent_cnt, 'sentences on', len(formatted_corpus))
-            flush = True
+            print(sent_cnt, 'sentences on', len(formatted_corpus), flush=True)
         stack = []
         queue = list(sentence)
-        #print('queue:', queue)
         graph = {}
         graph['heads'] = {}
         graph['heads']['0'] = '0'
@@ -162,20 +181,16 @@ if __name__ == '__main__':
         graph['deprels']['0'] = 'ROOT'
         transitions = []
         while queue:
-            stack, queue, graph, trans = reference(stack, queue, graph)
+            # x_features = {'stack_0_word': 'nil', 'stack_0_POS': 'nil', 'stack_1_word': 'nil', 'stack_1_POS': 'nil'...
+            x_features = features.extract(stack, queue, graph, feature_names_middle, sentence)
+            trans_nr = classifier.predict()
+            stack, queue, graph, trans = parse_ml(stack, queue, graph, trans)
             transitions.append(trans)
-            feat = features.extract(stack, queue, graph, feature_names_middle, sentence)
-
-
         stack, graph = transition.empty_stack(stack, graph)
-        #print('Equal graphs:', transition.equal_graphs(sentence, graph))
-        list_word = []
-        i = 0
-        # Poorman's projectivization to have well-formed graphs.
-        #print('sentence:', sentence)
+        # print('Equal graphs:', transition.equal_graphs(sentence, graph))
 
+        # Poorman's projectivization to have well-formed graphs.
         for word in sentence:
-            list_word.append(word['form'])
             word['head'] = graph['heads'][word['id']]
-        #print(transitions)
-        #print(graph)
+        # print(transitions)
+        # print(graph)
