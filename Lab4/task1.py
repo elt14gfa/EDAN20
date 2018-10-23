@@ -256,9 +256,10 @@ if __name__ == '__main__':
                     or train_file == 'dependencies/ud-treebanks-v2.2/UD_Danish-DDT/da_ddt-ud-train.conllu':
                 sentences = read_sentences(train_file)
                 formatted_corpus = split_rows(sentences, column_names_u)
+                print(train_file)
                 # print(train_file, len(formatted_corpus))
-                # find_pairs(formatted_corpus)
-                find_triples(formatted_corpus)
+                find_pairs(formatted_corpus)
+                #find_triples(formatted_corpus)
     else:
 
         SUBJ = 'SS'

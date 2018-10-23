@@ -1,0 +1,3 @@
+print(unit_tests())
+spelltest(Testset(open('spell-testset1.txt'))) # Development set
+spelltest(Testset(open('spell-testset2.txt')))  # Final test set
