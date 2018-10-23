@@ -9,7 +9,6 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn import svm
 from sklearn import linear_model
 from sklearn import metrics
-from sklearn.metrics import accuracy_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn import tree
 from sklearn.naive_bayes import GaussianNB
@@ -110,13 +109,12 @@ def predict(test_sentences, feature_names, f_out):
 
         # Appends the predicted chunks as a last column and saves the rows
         rows = test_sentence.splitlines()
-    """
         rows = [rows[i] + ' ' + y_test_predicted[i] for i in range(len(rows))]
         for row in rows:
             f_out1.write(row + '\n')
         f_out1.write('\n')
     f_out1.close()
-    """
+
 
 if __name__ == '__main__':
     start_time = time.clock()
@@ -147,8 +145,6 @@ if __name__ == '__main__':
     #classifier = DecisionTreeClassifier()
     #classifier = linear_model.perceptron(penalty='12')
     #classifier = Perceptron()
-    #print('X', X)
-    #print('Y', y)
     model = classifier.fit(X, y)
     print(model)
 
